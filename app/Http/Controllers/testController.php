@@ -11,6 +11,90 @@ use App\BestchangeCurrs;
 use DB;
 class testController extends Controller
 {
+
+private $crypto =[
+        /* BTC, */                  93=>'BTC',
+         /*ETH,*/                   139=>'ETH',
+        /*LTC,*/                    99=>'LTC',
+         /*XRP, */                  161=>'XRP',
+        /*XMR,*/                    149=>'XMR',
+        /*Tether ERC-20 (USDT), */  36=>'USDT',
+        /*XLM,*/                    182=>'XLM',
+        /*TRX,*/                    185=>'TRX',
+        /*Chainlink (LINK), */      197=>'LINK'
+        ];
+
+private $fiat = [
+    /* Advanced Cash USD, */            88=>'USD',
+    /*Advanced Cash EUR,*/              120=>'EUR',
+    /*Advanced Cash RUB, */             121=>'RUB',
+    /*Capitalist USD,  */               145=>'USD',
+    /*Capitalist RUB,*/                 85=>'RUB',
+    /*Криптобиржи USD,*/                148=>'USD',
+    /*Криптобиржи EUR,*/                153=>'EUR',
+    /*Сбербанк (RUB),*/                 42=>'RUB',
+    /*Альфа-банк (RUB),*/               52=>'RUB',
+    /*Альфа cash-in RUB,*/              62=>'RUB',
+    /*Тинькофф (RUB), */                105=>'RUB',
+    /*ТКС cash-in (RUB),*/              46=>'RUB',
+    /*Visa/Mastercard RUB, */           59=>'RUB',
+    /*Visa/Mastercard USD,*/            58=>'USD',
+    /*Visa/Mastercard EUR,*/            65=>'EUR',
+    /*Любой банк USD,*/                 69=>'USD',
+    /*Любой банк EUR,*/                 70=>'EUR',
+    /*Любой банк RUB,*/                 71=>'RUB',
+    /*Sepa EUR, */                      171=>'EUR',
+    /*Наличные RUB,*/                   91=>'RUB',
+    /*Наличные EUR,*/                   141=>'EUR',
+    /*Наличные USD */                   89=>'USD'
+];
+
+    function prepareTable($res){
+        $table=[];
+        $currs=[
+            'USD'=>\Cache::get('USD'),
+            'EUR'=>\Cache::get('EUR'),
+            'RUB'=>1
+        ];
+        $fiat=$this->fiat;
+        $crypto=$this->crypto;
+        $res_fiat=Arr::where($res, function ($value, $key) use ($fiat) {
+            return (isset($fiat[$value->curr1]));
+        });
+
+        $res_crypto=Arr::where($res, function ($value, $key) use ($crypto) {
+            return (isset($crypto[$value->curr1]));
+        });
+
+        foreach ($res_fiat as $v){
+            $n=[];
+            $n['fiat1']=$v->Name1;
+            $n['crypto1']=$v->Name2;
+            $n['rate1']=$v->rate;
+            $n['rate_rub1']=$v->rub_rate;
+            $crypto_flt =Arr::where($res, function ($value, $key) use ($v) {
+                return ($v->curr2 == $value->curr1) and ($v->curr1!= $value->curr2);
+            });
+            foreach ($crypto_flt as $c2){
+                $n2=$n;
+                $n2['crypto2']=$c2->Name1;
+                $n2['fiat2']=$c2->Name2;
+                $n2['currs']=$currs[$fiat[$c2->curr2]];
+                $n2['rate_rub2']=(1 / ($c2->rate) ) * ($currs[$fiat[$c2->curr2]]);
+             //   $n2['rate_rub2']=$c2->rub_rate ;
+                $n2['rate2']=1/$c2->rate;
+                $n2['diff']=(1-$n['rate_rub1']/$n2['rate_rub2'])*100;
+                $table[]=$n2;
+            }
+        }
+          $table = Arr::sort($table,function ($value) {
+              return $value['diff'];
+          });
+        $table=array_reverse($table);
+      //  dd($table);
+        return $table;
+    }
+
     function index(){
         $res = DB::table('bestchange_rates')
             ->leftJoin('bestchange_currs AS C1', 'C1.id', '=', 'bestchange_rates.curr1')
@@ -18,8 +102,25 @@ class testController extends Controller
             ->select('C1.name as Name1', 'C2.name AS Name2', 'bestchange_rates.*')
             ->get();
 
+        $res=$res->toArray();
+        $table = $this->prepareTable($res);
+        /*
+        while ($res){
+            $el=array_shift($res);
+            $curr2=$el->curr2;
+            $table[]=$el;
+            $filtered = Arr::where($res, function ($value, $key) use ($curr2) {
+                return ($value->curr1==$curr2);
+            });
+           foreach ($filtered as $k=>$v) {
+               $table[]=$v;
+               if (isset($res[$k]))
+                   unset($res[$k]);
+           }
+        }
+       */
         return view('home', [
-            'res' => $res,
+            'res' => $table,
             'usd'=>\Cache::get('USD'),
             'eur'=>\Cache::get('EUR')
         ]);
@@ -76,45 +177,8 @@ class testController extends Controller
         //
         $fiat_rates= $this->getFiatRates();
         //массивы
-        $fiat = [
-            /* Advanced Cash USD, */            88=>'USD',
-            /*Advanced Cash EUR,*/              120=>'EUR',
-            /*Advanced Cash RUB, */             121=>'RUB',
-            /*Capitalist USD,  */               145=>'USD',
-            /*Capitalist RUB,*/                 85=>'RUB',
-            /*Криптобиржи USD,*/                148=>'USD',
-            /*Криптобиржи EUR,*/                153=>'EUR',
-            /*Сбербанк (RUB),*/                 42=>'RUB',
-            /*Альфа-банк (RUB),*/               52=>'RUB',
-            /*Альфа cash-in RUB,*/              62=>'RUB',
-            /*Тинькофф (RUB), */                105=>'RUB',
-            /*ТКС cash-in (RUB),*/              46=>'RUB',
-            /*Visa/Mastercard RUB, */           59=>'RUB',
-            /*Visa/Mastercard USD,*/            58=>'USD',
-            /*Visa/Mastercard EUR,*/            65=>'EUR',
-            /*Любой банк USD,*/                 69=>'USD',
-            /*Любой банк EUR,*/                 70=>'EUR',
-            /*Любой банк RUB,*/                 71=>'RUB',
-            /*Sepa EUR, */                      171=>'EUR',
-            /*Наличные RUB,*/                   91=>'RUB',
-            /*Наличные EUR,*/                   141=>'EUR',
-            /*Наличные USD */                   89=>'USD'
-        ];
-
-        $crypto = [
-        /* BTC, */                  93=>'BTC',
-         /*ETH,*/                   139=>'ETH',
-        /*LTC,*/                    99=>'LTC',
-         /*XRP, */                  161=>'XRP',
-        /*XMR,*/                    149=>'XMR',
-        /*Tether ERC-20 (USDT), */  36=>'USDT',
-        /*XLM,*/                    182=>'XLM',
-        /*TRX,*/                    185=>'TRX',
-        /*Chainlink (LINK), */      197=>'LINK'
-        ];
-
-        $usd=75;
-        $eur=85;
+        $fiat=$this->fiat;
+        $crypto = $this->crypto;
         $from=[];
         $to=[];
 
@@ -139,7 +203,8 @@ class testController extends Controller
                     $a=[
                         'curr1'=>$from_cy,
                         'curr2'=>$to_cy,
-                        'rate'=>($entry["rate"] < 1)?1/$entry["rate"]:$entry["rate"]
+                        'rate'=>$entry["rate"]
+                      //  'rate'=>($entry["rate"] < 1)?1/$entry["rate"]:$entry["rate"]
                     ];
                     $from[]=$a;
                 }
@@ -160,7 +225,8 @@ class testController extends Controller
                     $a=[
                         'curr1'=>$from_cy,
                         'curr2'=>$to_cy,
-                        'rate'=>($entry["rate"] < 1)?1/$entry["rate"]:$entry["rate"]
+                        'rate'=>$entry["rate"]
+                      //  'rate'=>($entry["rate"] < 1)?1/$entry["rate"]:$entry["rate"]
                     ];
                     $to[]=$a;
                 }
@@ -187,7 +253,8 @@ class testController extends Controller
                     'curr1'=>$v['curr1'],
                     'curr2'=>$v['curr2'],
                     'rate'=>$v['rate'],
-                    'diff'=>$v['diff'],
+                    'diff'=>0,
+                 //   'diff'=>$v['diff'],
                     'rub_rate'=>$v['rate'] *
                         ((isset($fiat[$v['curr1']]))? $fiat_rates[$fiat[$v['curr1']]]:1) *
                         ((isset($fiat[$v['curr2']]))? $fiat_rates[$fiat[$v['curr2']]]:1)
@@ -200,7 +267,8 @@ class testController extends Controller
                         'curr1'=>$val['curr1'],
                         'curr2'=>$val['curr2'],
                         'rate'=>$val['rate'],
-                        'diff'=>$v['diff'],
+                        'diff'=>0,
+                  //      'diff'=>$v['diff'],
                         'rub_rate'=>$val['rate'] *
                             ((isset($fiat[$val['curr1']]))? $fiat_rates[$fiat[$val['curr1']]]:1) *
                             ((isset($fiat[$val['curr2']]))? $fiat_rates[$fiat[$val['curr2']]]:1)

@@ -11,25 +11,25 @@
     <table class="table table-bordered ">
         <thead>
         <tr>
-            <th>Валюта 1</th>
-            <th>Валюта 2</th>
-            <th>Курс обмена</th>
+            <th> Fiat 1</th>
+            <th>Crypto 1</th>
+            <th> Fiat2</th>
             <th>Разница %</th>
-            <th>RUB</th>
-            <th>Date</th>
+
+
         </tr>
         </thead>
         <tbody id="myTable">
         @foreach($res as $k=>$r)
 
         <tr>
-            <td>{{ $r->Name1 }}</td>
-            <td>{{ $r->Name2 }}</td>
-            <td>{{ $r->rate }}</td>
-            <td>{{ $r->diff }}</td>
-            <td>{{ $r->rub_rate }}</td>
-            <td>{{ $r->updated_at }}</td>
+            <td>{{ $r['fiat1'] }} <br><small>{{ $r['rate_rub1'] }}</small></td>
+            <td>{{ $r['crypto1'] }}</td>
+            <td>{{ $r['fiat2'] }}<br><small>{{ $r['rate_rub2'] }}</small></td>
+            <td>{{ $r['diff']}}</td>
+
         </tr>
+        {{--
             @isset($res[$k-1])
                 @if(($res[$k-1]->curr2 == $r->curr1) and($res[$k-1]->curr1 == $r->curr2))
                     <tr>
@@ -37,6 +37,7 @@
                     </tr>
                 @endif
             @endisset
+        --}}
         @endforeach
         </tbody>
     </table>
