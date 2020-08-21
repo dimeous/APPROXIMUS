@@ -337,7 +337,7 @@ private $fiat = [
 
         echo("<br>Список валют:<br>");
         ksort($currencies);
-        foreach ($currencies as $cy_id=>$cy_name) echo($cy_id . " &ndash; " . /*mb_convert_encoding($cy_name,"Windows-1252",'auto') */$cy_name. "<br>");
+        foreach ($currencies as $cy_id=>$cy_name) echo($cy_id . " &ndash; " . $cy_name. "<br>");
 
         echo("<br>Список обменников:<br>");
         ksort($exchangers);
