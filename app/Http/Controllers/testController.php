@@ -20,13 +20,15 @@ class testController extends Controller
 
         return view('home', [
             'res' => $res,
+            'usd'=>\Cache::get('USD'),
+            'eur'=>\Cache::get('EUR')
         ]);
     }
 
     function updateDB(){
         $temp_filename = storage_path('app').'\\be.zip';
         $zipFilePath=storage_path('app').'\\be.zip';
-        //$this->saveRateToCash();
+        $this->downloadbestExchange();
         $this->saveBestExchangetoDatabase($zipFilePath);
         return redirect('/');
     }
@@ -43,7 +45,10 @@ class testController extends Controller
         $zip = new ZipArchive;
         if (!$zip->open($temp_filename)) exit("error");
         $currencies = array();
-        foreach (explode("\n", $zip->getFromName("bm_cy.dat")) as $value) {
+        $tt=$zip->getFromName("bm_cy.dat");
+        $tt=iconv('CP1251','UTF-8',$tt);
+        //$tt= mb_convert_encoding($tt,  mb_detect_encoding($tt), 'KOI-8R');
+        foreach (explode("\n",$tt ) as $value) {
             $entry = explode(";", $value);
             $currencies[$entry[0]] = $entry[2];
         }
@@ -58,6 +63,8 @@ class testController extends Controller
             $rates[$entry[0]][$entry[1]][$entry[2]] = array("rate"=>$entry[3] / $entry[4], "reserve"=>$entry[5], "reviews"=>str_replace(".", "/", $entry[6]));
         }
         $zip->close();
+       //удаляем файл
+        unlink($temp_filename);
         //заполняем названия
         BestchangeCurrs::query()->truncate();
         foreach ($currencies as $k=>$curr){
@@ -167,7 +174,7 @@ class testController extends Controller
                 $val = Arr::first($to, function ($value, $key) use ($v) {
                     return (($value['curr1'] == $v['curr2']) and ($value['curr2'] == $v['curr1'])) ;
                 });
-                $from[$k]['diff']=($val)?$v['rate']*100/$val['rate']:0;
+                $from[$k]['diff']=($val)?(1-$v['rate']/$val['rate'])*100:0;
             }
 
             $sorted = array_values(Arr::sort($from, function ($value) {
@@ -210,12 +217,14 @@ class testController extends Controller
         $res=['RUB'=>1,'USD'=>75, 'EUR'=>85];
         if ($data=$req['marketdata']['data'])
             foreach ($data as $v){
-                if (($v[0]=='EUR_RUB__TOD') and ($v[1]>0))
-                    //\Cache::put('EUR',$v[1]);
-                    $res['EUR']=$v[1];
-                if ($v[0]=='USD000000TOD')
-                    //\Cache::put('USD',$v[1]);
-                    $res['USD']=$v[1];
+                if (($v[0]=='EUR_RUB__TOD') and ($v[1]>0)) {
+                    \Cache::put('EUR', $v[1]);
+                    $res['EUR'] = $v[1];
+                }
+                if ($v[0]=='USD000000TOD') {
+                    \Cache::put('USD',$v[1]);
+                    $res['USD'] = $v[1];
+                }
             }
         return $res;
     }

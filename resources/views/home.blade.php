@@ -3,7 +3,8 @@
 @section('content')
 
 <div class="container">
-    <p>Server time:{{ date("Y-m-d H:i:s") }} <a href="{{route('update')}}" class="btn btn-success ml-4">Обновить данные</a></p>
+    <p><i class="btn btn-dark"><b>USD: </b> {{$usd}}</i>   <i class="btn btn-dark"><b>EUR:</b> {{$eur}}</i>    Server time:{{ date("Y-m-d H:i:s") }} <a href="{{route('update')}}" class="btn btn-success ml-4">Обновить данные</a></p>
+
 
     <input class="form-control" id="myInput" type="text" placeholder="Search..">
     <br>
