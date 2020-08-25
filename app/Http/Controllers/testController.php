@@ -12,16 +12,29 @@ use DB;
 class testController extends Controller
 {
 
+
 private $crypto =[
         /* BTC, */                  93=>'BTC',
          /*ETH,*/                   139=>'ETH',
         /*LTC,*/                    99=>'LTC',
          /*XRP, */                  161=>'XRP',
-        /*XMR,*/                    149=>'XMR',
-        /*Tether ERC-20 (USDT), */  36=>'USDT',
         /*XLM,*/                    182=>'XLM',
         /*TRX,*/                    185=>'TRX',
-        /*Chainlink (LINK), */      197=>'LINK'
+        /*Chainlink (LINK), */      197=>'LINK',
+                                    172=>'BCH',
+                                    137=>'BSV',
+                                    149=>'XMR',
+                                    140=>'DASH',
+                                    162=>'ZEC',
+                                    163=>'OMNI(USDT)',
+                                    36=>'ERC20(USDT)',
+                                    23=>'USDC',
+                                    24=>'TUSD',
+                                    189=>'PAX',
+                                    177=>'NEO',
+                                    178=>'EOS',
+                                    133=>'WAVES',
+                                    175=>'XTZ',
         ];
 
 private $fiat = [
@@ -46,7 +59,17 @@ private $fiat = [
     /*Sepa EUR, */                      171=>'EUR',
     /*Наличные RUB,*/                   91=>'RUB',
     /*Наличные EUR,*/                   141=>'EUR',
-    /*Наличные USD */                   89=>'USD'
+    /*Наличные USD */                   89=>'USD',
+/*    Paypal USD,*/                     45=>'USD',
+/*Paypal EUR, */                        80=>'EUR',
+/*Paypal RUB, */                        98=>'RUB',
+/*Payeer USD, */                        108=>'USD',
+/*Payeer EUR, */                        122=>'EUR',
+/*Payeer RUB,*/                         117=>'RUB',
+/*ВТБ, */                               51=>'RUB',
+/*Revolut USD, */                       192=>'USD',
+/*Revolut EUR */                        193=>'EUR',
+
 ];
 
     function prepareTable($res){
@@ -58,13 +81,20 @@ private $fiat = [
         ];
         $fiat=$this->fiat;
         $crypto=$this->crypto;
-        $res_fiat=Arr::where($res, function ($value, $key) use ($fiat) {
-            return (isset($fiat[$value->curr1]));
+        $set_fiat=\Cache::get('fiat');
+        $set_crypto=\Cache::get('crypto');
+        //selected fiat from settings
+        $res_fiat=Arr::where($res, function ($value, $key) use ($fiat,$set_fiat) {
+            return (isset($fiat[$value->curr1]) and isset($set_fiat[$value->curr1]));
         });
 
-        $res_crypto=Arr::where($res, function ($value, $key) use ($crypto) {
-            return (isset($crypto[$value->curr1]));
-        });
+        //amount in rub > then in settings
+        if (\Cache::get('checkbox_min_rub')) {
+            $min=\Cache::get('checkbox_min_rub_sum');
+            $res_fiat = Arr::where($res_fiat, function ($value, $key)use ($min) {
+                return $value->rub_rate >= $min;
+            });
+        }
 
         foreach ($res_fiat as $v){
             $n=[];
@@ -72,8 +102,9 @@ private $fiat = [
             $n['crypto1']=$v->Name2;
             $n['rate1']=$v->rate;
             $n['rate_rub1']=$v->rub_rate;
-            $crypto_flt =Arr::where($res, function ($value, $key) use ($v) {
-                return ($v->curr2 == $value->curr1) and ($v->curr1!= $value->curr2);
+            //selected crypto from settings
+            $crypto_flt =Arr::where($res, function ($value, $key) use ($v,$set_crypto,$set_fiat) {
+                return ($v->curr2 == $value->curr1) and ($v->curr1!= $value->curr2) and isset($set_crypto[$v->curr2]) and isset($set_fiat[$value->curr2]);
             });
             foreach ($crypto_flt as $c2){
                 $n2=$n;
@@ -81,17 +112,22 @@ private $fiat = [
                 $n2['fiat2']=$c2->Name2;
                 $n2['currs']=$currs[$fiat[$c2->curr2]];
                 $n2['rate_rub2']=(1 / ($c2->rate) ) * ($currs[$fiat[$c2->curr2]]);
-             //   $n2['rate_rub2']=$c2->rub_rate ;
                 $n2['rate2']=1/$c2->rate;
-                $n2['diff']=(1-$n['rate_rub1']/$n2['rate_rub2'])*100;
+                $n2['diff']=(!$n2['rate_rub2'])?0:(1-$n['rate_rub1']/$n2['rate_rub2'])*100;
                 $table[]=$n2;
             }
         }
-          $table = Arr::sort($table,function ($value) {
+
+        //отрицательные значения
+        if (!\Cache::get('checkbox_minus'))
+            $table =Arr::where($table, function ($value, $key)  {
+                return $value['diff']>0;
+            });
+
+        $table = Arr::sort($table,function ($value) {
               return $value['diff'];
           });
         $table=array_reverse($table);
-      //  dd($table);
         return $table;
     }
 
@@ -101,28 +137,13 @@ private $fiat = [
             ->leftJoin('bestchange_currs AS C2', 'C2.id', '=', 'bestchange_rates.curr2')
             ->select('C1.name as Name1', 'C2.name AS Name2', 'bestchange_rates.*')
             ->get();
-
         $res=$res->toArray();
         $table = $this->prepareTable($res);
-        /*
-        while ($res){
-            $el=array_shift($res);
-            $curr2=$el->curr2;
-            $table[]=$el;
-            $filtered = Arr::where($res, function ($value, $key) use ($curr2) {
-                return ($value->curr1==$curr2);
-            });
-           foreach ($filtered as $k=>$v) {
-               $table[]=$v;
-               if (isset($res[$k]))
-                   unset($res[$k]);
-           }
-        }
-       */
         return view('home', [
             'res' => $table,
             'usd'=>\Cache::get('USD'),
-            'eur'=>\Cache::get('EUR')
+            'eur'=>\Cache::get('EUR'),
+            'dt'=>\Cache::get('dt'),
         ]);
     }
 
@@ -131,7 +152,10 @@ private $fiat = [
         $zipFilePath=storage_path('app').'\\be.zip';
         $this->downloadbestExchange();
         $this->saveBestExchangetoDatabase($zipFilePath);
-        return redirect('/');
+        if (!isset($_GET['silent']))
+            return redirect('/');
+        else
+            exit(0);
     }
 
 
@@ -148,7 +172,6 @@ private $fiat = [
         $currencies = array();
         $tt=$zip->getFromName("bm_cy.dat");
         $tt=iconv('CP1251','UTF-8',$tt);
-        //$tt= mb_convert_encoding($tt,  mb_detect_encoding($tt), 'KOI-8R');
         foreach (explode("\n",$tt ) as $value) {
             $entry = explode(";", $value);
             $currencies[$entry[0]] = $entry[2];
@@ -165,6 +188,8 @@ private $fiat = [
         }
         $zip->close();
        //удаляем файл
+        \Cache::put('dt',time());
+        //дата обновления
         unlink($temp_filename);
         //заполняем названия
         BestchangeCurrs::query()->truncate();
@@ -286,62 +311,26 @@ private $fiat = [
         if ($data=$req['marketdata']['data'])
             foreach ($data as $v){
                 if (($v[0]=='EUR_RUB__TOD') and ($v[1]>0)) {
+                    $v[1]=($v[1]>0)?$v[1]:85;
                     \Cache::put('EUR', $v[1]);
                     $res['EUR'] = $v[1];
                 }
                 if ($v[0]=='USD000000TOD') {
+                    $v[1]=($v[1]>0)?$v[1]:75;
                     \Cache::put('USD',$v[1]);
                     $res['USD'] = $v[1];
                 }
             }
+        else{
+            $res['EUR'] = 85;
+            $res['USD'] = 75;
+        }
         return $res;
     }
-
-    private function ext($temp_filename){
-        $zip = new ZipArchive;
-        if (!$zip->open($temp_filename)) exit("error");
-        $currencies = array();
-        foreach (explode("\n", $zip->getFromName("bm_cy.dat")) as $value) {
-            $entry = explode(";", $value);
-            $currencies[$entry[0]] = $entry[2];
-        }
-
-        $exchangers = array();
-        foreach (explode("\n", $zip->getFromName("bm_exch.dat")) as $value) {
-            $entry = explode(";", $value);
-            $exchangers[$entry[0]] = $entry[1];
-        }
-        $rates = array();
-        foreach (explode("\n", $zip->getFromName("bm_rates.dat")) as $value) {
-            $entry = explode(";", $value);
-            $rates[$entry[0]][$entry[1]][$entry[2]] = array("rate"=>$entry[3] / $entry[4], "reserve"=>$entry[5], "reviews"=>str_replace(".", "/", $entry[6]));
-        }
-        $zip->close();
-        //  unlink($temp_filename);
-
-        $from_cy = 63;//QIWI
-        $to_cy = 93;//Bitcoin
-
-        echo("Курсы по направлению <a target=\"_blank\" href=\"https://www.bestchange.ru/index.php?from=" . $from_cy . "&to=" . $to_cy . "\">" . $currencies[$from_cy] . " &rarr; " . $currencies[$to_cy] . "</a>:<br>");
-        uasort($rates[$from_cy][$to_cy], function ($a, $b) {
-            if ($a["rate"] > $b["rate"]) return 1;
-            if ($a["rate"] < $b["rate"]) return -1;
-            return(0);
-        });
-        foreach ($rates[$from_cy][$to_cy] as $exch_id=>$entry) {
-            echo("<a target=\"_blank\" href=\"https://www.bestchange.ru/click.php?id=" . $exch_id . "\">" . $exchangers[$exch_id] . "</a> &ndash;
-отзывы <a target=\"_blank\" href=\"https://www.bestchange.ru/info.php?id=" . $exch_id . "\">" . $entry["reviews"] . "</a> &ndash;
-курс <b>" . ($entry["rate"] < 1 ? 1 : $entry["rate"]) . "</b> " . $currencies[$from_cy] . " &rarr; <b>" . ($entry["rate"] < 1 ? 1 / $entry["rate"] : 1) . "</b> " . $currencies[$to_cy] . " &ndash;
-резерв " . $entry["reserve"] . " " . $currencies[$to_cy] . "<br>");
-        }
-
-        echo("<br>Список валют:<br>");
-        ksort($currencies);
-        foreach ($currencies as $cy_id=>$cy_name) echo($cy_id . " &ndash; " . $cy_name. "<br>");
-
-        echo("<br>Список обменников:<br>");
-        ksort($exchangers);
-        foreach ($exchangers as $exch_id=>$exch_name) echo($exch_id . " &ndash; " . $exch_name . "<br>");
+   public function getFiat(){
+        return $this->fiat;
     }
-
+    public function getCrypto(){
+            return $this->crypto;
+    }
 }

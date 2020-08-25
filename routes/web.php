@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/',   'testController@index');
+Route::get('/settings',   'settingsController@index');
+Route::post('/settings',   'settingsController@save');
 Route::get('/update',   'testController@updateDB')->name('update');;
 
 /*

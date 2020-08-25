@@ -17,9 +17,9 @@ class CreateBestchangeRatesTable extends Migration
             $table->id();
             $table->integer('curr1');
             $table->integer('curr2');
-            $table->decimal('rate',16,8);
+            $table->decimal('rate',22,12);
             $table->decimal('diff',6,3);
-            $table->decimal('rub_rate',16,8);
+            $table->decimal('rub_rate',22,12);
             $table->timestamps();
         });
     }

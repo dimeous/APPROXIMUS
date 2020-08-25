@@ -3,8 +3,9 @@
 @section('content')
 
 <div class="container">
-    <p><i class="btn btn-dark"><b>USD: </b> {{$usd}}</i>   <i class="btn btn-dark"><b>EUR:</b> {{$eur}}</i>    Server time:{{ date("Y-m-d H:i:s") }} <a href="{{route('update')}}" class="btn btn-success ml-4">Обновить данные</a></p>
-
+    <p><i class="btn btn-dark"><b>USD: </b> {{$usd}}</i>   <i class="btn btn-dark"><b>EUR:</b> {{$eur}}</i>
+        Server time:{{ date("Y-m-d H:i:s") }} <a href="{{route('update')}}" class="btn btn-success ml-4">Обновить данные</a>   </p>
+    <small>Последняя дата обновления {{date("d.m.Y H:i:s",$dt)}}</small>
 
     <input class="form-control" id="myInput" type="text" placeholder="Search..">
     <br>
@@ -15,18 +16,16 @@
             <th>Crypto 1</th>
             <th> Fiat2</th>
             <th>Разница %</th>
-
-
         </tr>
         </thead>
         <tbody id="myTable">
         @foreach($res as $k=>$r)
 
         <tr>
-            <td>{{ $r['fiat1'] }} <br><small>{{ $r['rate_rub1'] }}</small></td>
+            <td>{{ $r['fiat1'] }} <small>({{ number_format($r['rate1'],3) }})</small><br><small>{{ number_format($r['rate_rub1'],3) }}</small></td>
             <td>{{ $r['crypto1'] }}</td>
-            <td>{{ $r['fiat2'] }}<br><small>{{ $r['rate_rub2'] }}</small></td>
-            <td>{{ $r['diff']}}</td>
+            <td>{{ $r['fiat2'] }} <br><small>{{ number_format($r['rate_rub2'],3) }}</small></td>
+            <td>{{ number_format($r['diff'],4)}}</td>
 
         </tr>
         {{--
