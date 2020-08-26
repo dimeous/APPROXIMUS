@@ -4,8 +4,8 @@
 
 <div class="container">
     <p><i class="btn btn-dark"><b>USD: </b> {{$usd}}</i>   <i class="btn btn-dark"><b>EUR:</b> {{$eur}}</i>
-        Server time:{{ date("Y-m-d H:i:s") }} <a href="{{route('update')}}" class="btn btn-success ml-4">Обновить данные</a>   </p>
-    <small>Последняя дата обновления {{date("d.m.Y H:i:s",$dt)}}</small>
+        now:{{ date("H:i:s") }} <a href="{{route('update')}}" class="btn btn-success ml-4">Обновить данные</a>   </p>
+    <small>Последняя дата обновления {{date("H:i:s",$dt)}}</small>
 
     <input class="form-control" id="myInput" type="text" placeholder="Search..">
     <br>
@@ -20,13 +20,16 @@
         </thead>
         <tbody id="myTable">
         @foreach($res as $k=>$r)
-
+            <tr class="bg-info">
+                <td>{{ $r['fiat1'] }} </td>
+                <td>{{ $r['crypto1'] }}</td>
+                <td>{{ $r['fiat2'] }} </td>
+                <td>{{ number_format($r['diff'],2)}} %</td>
+            </tr>
         <tr>
-            <td>{{ $r['fiat1'] }} <small>({{ number_format($r['rate1'],3) }})</small><br><small>{{ number_format($r['rate_rub1'],3) }}</small></td>
-            <td>{{ $r['crypto1'] }}</td>
-            <td>{{ $r['fiat2'] }} <br><small>{{ number_format($r['rate_rub2'],3) }}</small></td>
-            <td>{{ number_format($r['diff'],4)}}</td>
-
+            <td colspan="4">
+                {{ number_format($r['rate_rub1'],2) }} RUB → {{ number_format($r['rate1'],2) }} → 1 {{ $r['crypto1'] }} → {{number_format($r['rate2'],2) }} {{ $r['fiat2'] }} → {{ number_format($r['rate_rub2'],2) }} RUB </small>
+            </td>
         </tr>
         {{--
             @isset($res[$k-1])
