@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
+use Illuminate\Support\Facades\Request;
 use Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
-use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -21,14 +22,14 @@ class AuthController extends Controller
     |
     */
 
-    use AuthenticatesAndRegistersUsers, ThrottlesLogins;
+    use  ThrottlesLogins;
 
     /**
      * Where to redirect users after login / registration.
      *
      * @var string
      */
-    protected $redirectTo = '/tasks';
+    protected $redirectTo = '/';
 
     /**
      * Create a new authentication controller instance.
@@ -38,6 +39,7 @@ class AuthController extends Controller
     public function __construct()
     {
         $this->middleware('guest', ['except' => 'logout']);
+
     }
 
     /**
@@ -49,8 +51,6 @@ class AuthController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => 'required|max:255',
-            'email' => 'required|email|max:255|unique:users',
             'password' => 'required|confirmed|min:6',
         ]);
     }
@@ -69,4 +69,28 @@ class AuthController extends Controller
             'password' => bcrypt($data['password']),
         ]);
     }
+
+    public function getLogin()
+    {
+        return view('auth.login');
+    }
+    public function postLogin(\Request $request)
+    {
+        if (!$users =User::all()->toArray()){
+            $this->create([
+                'name' => 'naesdfg',
+                'email' => 'tes@gmail.com',
+                'password' => bcrypt('laravelssdgsdfg')
+            ]);
+        }
+
+       $pass =Request::input('password');
+       if ($pass=='12345') {
+           Auth::loginUsingId(1);
+           return redirect()->intended();
+       }
+       else
+           return view('auth.login');
+    }
+
 }

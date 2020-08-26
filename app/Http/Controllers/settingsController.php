@@ -16,7 +16,6 @@ class settingsController extends testController
      $crypto =testController::getCrypto();
         $currs = DB::table('bestchange_currs')
             ->get()->keyBy('id')->toArray();
-       // dd($currs);
      return view('settings',
          [
              'crypto'=>$crypto,
