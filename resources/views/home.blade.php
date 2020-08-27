@@ -20,7 +20,7 @@
         </thead>
         <tbody id="myTable">
         @foreach($res as $k=>$r)
-            <tr class="bg-info">
+            <tr class="bg-grey">
                 <td>{{ $r['fiat1'] }} </td>
                 <td>{{ $r['crypto1'] }}</td>
                 <td>{{ $r['fiat2'] }} </td>
@@ -28,7 +28,11 @@
             </tr>
         <tr>
             <td colspan="4">
-                {{ number_format($r['rate_rub1'],2) }} RUB → {{ number_format($r['rate1'],2) }} → 1 {{ $r['crypto1'] }} → {{number_format($r['rate2'],2) }} {{ $r['fiat2'] }} → {{ number_format($r['rate_rub2'],2) }} RUB </small>
+                @if(Cache::get('checkbox_min_rub'))
+                    {{ number_format($r['rate_rub1']*$r['k'],2) }} RUB → {{ number_format($r['rate1']*$r['k'],2) }} → {{$r['k']}} {{ $r['crypto1'] }} → {{number_format($r['rate2']*$r['k'],2) }} {{ $r['fiat2'] }} → {{ number_format($r['rate_rub2']*$r['k'],2) }} RUB </small>
+                @else
+                    {{ number_format($r['rate_rub1'],2) }} RUB → {{ number_format($r['rate1'],2) }} → 1 {{ $r['crypto1'] }} → {{number_format($r['rate2'],2) }} {{ $r['fiat2'] }} → {{ number_format($r['rate_rub2'],2) }} RUB </small>
+                @endif
             </td>
         </tr>
         {{--

@@ -89,18 +89,21 @@ private $fiat = [
         });
 
         //amount in rub > then in settings
-        if (\Cache::get('checkbox_min_rub')) {
-            $min=\Cache::get('checkbox_min_rub_sum');
-            $res_fiat = Arr::where($res_fiat, function ($value, $key)use ($min) {
-                return $value->rub_rate >= $min;
-            });
-        }
+        /*
+            if (\Cache::get('checkbox_min_rub')) {
+                $min=\Cache::get('checkbox_min_rub_sum');
+                $res_fiat = Arr::where($res_fiat, function ($value, $key)use ($min) {
+                    return $value->rub_rate >= $min;
+                });
+            }
+        */
 
         foreach ($res_fiat as $v){
             $n=[];
             $n['fiat1']=$v->Name1;
             $n['crypto1']=$v->Name2;
             $n['rate1']=$v->rate;
+            $n['k']=($v->rub_rate)? (\Cache::get('checkbox_min_rub_sum'))/($v->rub_rate):0;
             $n['rate_rub1']=$v->rub_rate;
             //selected crypto from settings
             $crypto_flt =Arr::where($res, function ($value, $key) use ($v,$set_crypto,$set_fiat) {
