@@ -74,6 +74,13 @@ class AuthController extends Controller
     {
         return view('auth.login');
     }
+
+    public function getLogout()
+    {
+        Auth::logout();
+        return redirect('login');
+    }
+
     public function postLogin(\Request $request)
     {
         if (!$users =User::all()->toArray()){
@@ -86,7 +93,7 @@ class AuthController extends Controller
 
        $pass =Request::input('password');
        if ($pass=='12345') {
-           Auth::loginUsingId(1);
+           Auth::loginUsingId(1,1);
            return redirect()->intended();
        }
        else
