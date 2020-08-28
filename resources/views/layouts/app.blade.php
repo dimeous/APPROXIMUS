@@ -16,7 +16,8 @@
 </head>
 <body>
 <div id="app">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    @if(Auth::check())
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,7 +26,11 @@
             <a class="navbar-brand" href="{{ url('/') }}">
                 APPROXIMUS
             </a>
+            @if (\Route::current()->getName() != 'settings')
             <a class="btn btn-primary" href="/update"><i class="fas fa-sync-alt"></i></a>
+            @else
+                <button class="btn btn-primary" onclick="$('form').submit()"><i class="fas fa-file-export"></i></button>
+                @endif
             <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
@@ -39,7 +44,14 @@
 
         </div>
     </nav>
+        @else
+        <style type="text/css">
+            body {
+                background: #fefb64;
+            }
+            </style>
 
+    @endif
 
     @yield('content')
 </div>

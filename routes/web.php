@@ -14,15 +14,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/',   'testController@index')->middleware('auth');
-Route::get('/settings',   'settingsController@index')->middleware('auth');
+Route::get('/settings',   'settingsController@index')->middleware('auth')->name('settings');
 Route::post('/settings',   'settingsController@save');
-Route::get('/update',   'testController@updateDB')->name('update');;
+Route::get('/update',   'testController@updateDB')->name('update');
 
 
 // Маршруты аутентификации...
 Route::get('auth/login', 'Auth\AuthController@getLogin')->name('login');
 Route::post('auth/login', 'Auth\AuthController@postLogin');
-Route::get('auth/logout', 'Auth\AuthController@getLogout')->name('logout');
+Route::get('logout', '\App\Http\Controllers\Auth\AuthController@logout')->name('logout');
+
 /*
 // Маршруты регистрации...
 Route::get('auth/register', 'Auth\AuthController@getRegister');

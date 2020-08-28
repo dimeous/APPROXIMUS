@@ -4,10 +4,8 @@
 
 <div class="container">
     <div class="well">
-
         {!! Form::open(['url' => '/settings', 'class' => 'form-horizontal']) !!}
         <fieldset>
-            <legend>Настройки   {!! Form::submit('Сохранить', ['class' => 'btn btn-lg btn-info pull-right'] ) !!}</legend>
             <div class="form-group">
                 <div class="form-check">
                         {!! Form::checkbox('checkbox_min_rub',1,(\Cache::get('checkbox_min_rub_sum')?'checked':'')) !!}
@@ -45,7 +43,8 @@
             <!-- Submit Button -->
             <div class="form-group">
                 <div class="col-lg-10 col-lg-offset-2">
-                    {!! Form::submit('Сохранить', ['class' => 'btn btn-lg btn-info pull-right'] ) !!}
+                    <button type="submit" class="btn btn-primary"> <i class="fas fa-file-export"></i></button>
+
                 </div>
             </div>
 

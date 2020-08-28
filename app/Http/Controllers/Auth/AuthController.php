@@ -75,10 +75,10 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function getLogout()
-    {
+
+    public function logout(Request $request) {
         Auth::logout();
-        return redirect('login');
+        return redirect('/auth/login');
     }
 
     public function postLogin(\Request $request)
