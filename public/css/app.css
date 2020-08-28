@@ -16720,7 +16720,7 @@ readers do not read off random characters that represent icons */
 }
 
 .bg-grey {
-  background-color: grey;
+  background-color: #9c9c9ca1;
 }
 
 @media only screen and (max-width: 768px) {

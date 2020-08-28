@@ -14,7 +14,10 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
-<body>
+<body
+    @if(Auth::check())
+    class="bg-white"
+    @endif>
 <div id="app">
     @if(Auth::check())
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -47,7 +50,7 @@
         @else
         <style type="text/css">
             body {
-                background: #fefb64;
+                background: #fefb64!important;
             }
             </style>
 
