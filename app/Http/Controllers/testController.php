@@ -107,7 +107,7 @@ private $fiat = [
             $n['rate_rub1']=$v->rub_rate;
             //selected crypto from settings
             $crypto_flt =Arr::where($res, function ($value, $key) use ($v,$set_crypto,$set_fiat) {
-                return ($v->curr2 == $value->curr1) and ($v->curr1!= $value->curr2) and isset($set_crypto[$v->curr2]) and isset($set_fiat[$value->curr2]);
+                return ($v->curr2 == $value->curr1) /*and ($v->curr1!= $value->curr2)*/ and isset($set_crypto[$v->curr2]) and isset($set_fiat[$value->curr2]);
             });
             foreach ($crypto_flt as $c2){
                 $n2=$n;
